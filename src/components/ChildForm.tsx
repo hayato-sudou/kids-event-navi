@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import type { ChildProfile } from '@/types';
+import DatePicker from './DatePicker';
 
 interface Props {
   onSubmit: (profile: ChildProfile) => void;
@@ -9,7 +10,7 @@ interface Props {
 
 export default function ChildForm({ onSubmit }: Props) {
   const [name, setName] = useState('');
-  const [birthDate, setBirthDate] = useState('');
+  const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
   const [error, setError] = useState('');
 
   const handleSubmit = (e: FormEvent) => {
@@ -21,7 +22,7 @@ export default function ChildForm({ onSubmit }: Props) {
     setError('');
     onSubmit({
       name: name.trim() || 'お子さま',
-      birthDate: new Date(birthDate),
+      birthDate,
     });
   };
 
@@ -42,29 +43,23 @@ export default function ChildForm({ onSubmit }: Props) {
           placeholder="例：はなちゃん"
           maxLength={20}
           className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-200
-                     bg-stone-50 focus:outline-none focus:ring-2 focus:ring-sage-300
+                     bg-stone-50 text-stone-700 placeholder:text-stone-300
+                     focus:outline-none focus:ring-2 focus:ring-sage-300
                      focus:border-transparent transition"
         />
       </div>
 
       <div className="mb-5">
         <label
-          htmlFor="birth-date"
           className="block text-xs font-medium text-stone-500 mb-1.5"
         >
           生年月日
           <span className="text-rose-400 ml-0.5" aria-hidden="true">*</span>
         </label>
-        <input
-          id="birth-date"
-          type="date"
-          required
-          aria-required="true"
+        <DatePicker
           value={birthDate}
-          onChange={(e) => setBirthDate(e.target.value)}
-          className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-200
-                     bg-stone-50 focus:outline-none focus:ring-2 focus:ring-sage-300
-                     focus:border-transparent transition"
+          onChange={setBirthDate}
+          required
         />
         {error && (
           <p role="alert" className="mt-1.5 text-xs text-rose-500">

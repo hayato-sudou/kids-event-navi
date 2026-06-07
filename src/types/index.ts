@@ -9,6 +9,7 @@ export interface KidsEvent {
   key: EventKey;
   name: string;
   description: string;
+  detail: string;        // ← 追加
   date: Date;
   colorScheme: EventColorScheme;
   icon: string;
@@ -19,4 +20,10 @@ export interface EventColorScheme {
   badgeBg: string;
   badgeText: string;
   iconBg: string;
+}
+
+export interface Task {
+  id: string;
+  label: string;
+  checked: boolean;
 }
