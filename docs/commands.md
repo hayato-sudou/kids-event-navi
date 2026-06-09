@@ -74,7 +74,7 @@ git add .
 git add components/AddBookModal.jsx utils/googleBooksApi.ts
 
 # コミット
-git commit -m "修正"
+git commit -m "イベント周りの機能修正"
 
 # add + commit を一括（追跡済みファイルのみ）
 git commit -am "fix: SearchResultCard の参照パスを修正"
