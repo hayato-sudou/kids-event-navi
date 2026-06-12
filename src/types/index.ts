@@ -1,5 +1,3 @@
-export type EventKey = 'omiyamairi' | 'okuizome' | 'half' | 'birthday1';
-
 export interface ChildProfile {
   id?: string;          // DB保存後に付与
   name: string;
@@ -22,9 +20,19 @@ export interface EventColorScheme {
   badgeText: string;
   iconBg: string;
 }
+export const EVENT_KEYS = ['omiyamairi', 'okuizome', 'half', 'birthday1'] as const;
+export type EventKey = (typeof EVENT_KEYS)[number];
 
 export interface Task {
   id: string;
-  label: string;
+  label: string;          // 概要
+  description?: string;   // 詳細（ユーザー追加タスクは持たない）
   checked: boolean;
+}
+
+/** タスクマスタの1項目 */
+export interface TaskMasterItem {
+  key: string;            // イベント内で一意な安定キー
+  label: string;          // 概要
+  description: string;    // 詳細
 }

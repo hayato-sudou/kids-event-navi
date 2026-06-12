@@ -2,9 +2,9 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import HomeClient from '@/components/HomeClient';
 import { getChildProfile, getTasks } from '@/lib/childProfile';
+import { getDefaultTasks } from '@/lib/taskMaster';
 import { computeKidsEvents } from '@/lib/events';
-import { getDefaultTasks } from '@/lib/defaultTasks';
-import type { EventKey, Task } from '@/types';
+import type { EventKey, KidsEvent, Task } from '@/types';
 
 export default async function HomePage() {
   const session = await auth();
@@ -13,7 +13,7 @@ export default async function HomePage() {
   const userId = session.user.id;
   const profile = await getChildProfile(userId);
 
-  let events = [];
+  let events: KidsEvent[] = [];
   const taskMap: Record<string, Task[]> = {};
 
   if (profile?.id) {

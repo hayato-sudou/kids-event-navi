@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth';
 import { getChildProfile, saveChildProfile, getTasks } from '@/lib/childProfile';
 import { computeKidsEvents } from '@/lib/events';
-import { getDefaultTasks } from '@/lib/defaultTasks';
+import { getDefaultTasks } from '@/lib/taskMaster';
 import { getSupabaseAdmin } from '@/lib/db';
 import type { ChildProfile, KidsEvent, Task, EventKey } from '@/types';
 

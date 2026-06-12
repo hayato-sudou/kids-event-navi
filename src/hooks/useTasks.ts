@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { EventKey, Task } from '@/types';
-import { getDefaultTasks } from '@/lib/defaultTasks';
 import { saveTasksAction } from '@/app/actions/tasks';
 
 export function useTasks(eventKey: EventKey, childProfileId: string, initialTasks: Task[]) {
