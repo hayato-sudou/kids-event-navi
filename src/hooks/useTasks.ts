@@ -1,20 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { EventKey, Task } from '@/types';
-import { loadTasks, saveTasks } from '@/lib/taskStorage';
+import { getDefaultTasks } from '@/lib/defaultTasks';
+import { saveTasksAction } from '@/app/actions/tasks';
 
-export function useTasks(eventKey: EventKey) {
-  const [tasks, setTasks] = useState<Task[]>([]);
+export function useTasks(eventKey: EventKey, childProfileId: string, initialTasks: Task[]) {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
-  // 初回マウント時にlocalStorageから読み込む
+  // タスク変化のたびにDBに保存（debounce）
   useEffect(() => {
-    setTasks(loadTasks(eventKey));
-  }, [eventKey]);
-
-  // tasks変化のたびに永続化
-  useEffect(() => {
-    if (tasks.length === 0) return;
-    saveTasks(eventKey, tasks);
-  }, [eventKey, tasks]);
+    if (!childProfileId) return;
+    const timer = setTimeout(() => {
+      saveTasksAction(eventKey, tasks);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [eventKey, childProfileId, tasks]);
 
   const toggle = useCallback((id: string) => {
     setTasks((prev) =>

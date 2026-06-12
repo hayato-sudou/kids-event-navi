@@ -1,28 +1,25 @@
 import EventCard from './EventCard';
-import type { ChildProfile, KidsEvent } from '@/types';
+import type { ChildProfile, KidsEvent, Task } from '@/types';
 
 interface Props {
   profile: ChildProfile;
   events: KidsEvent[];
+  taskMap: Record<string, Task[]>;
 }
 
-export default function Timeline({ profile, events }: Props) {
+export default function Timeline({ profile, events, taskMap }: Props) {
   return (
     <section aria-label={`${profile.name}のイベントスケジュール`}>
       <p className="text-[11px] font-medium text-stone-400 uppercase tracking-widest mb-4">
         {profile.name}のイベントスケジュール
       </p>
-
       <div className="relative pl-7">
-        {/* 縦線 */}
         <div
           className="absolute left-2.5 top-3 bottom-3 w-px bg-stone-100"
           aria-hidden="true"
         />
-
         {events.map((event) => (
           <div key={event.key} className="relative mb-4 last:mb-0">
-            {/* ドット */}
             <span
               className="absolute -left-4.5 top-3.5 w-2.5 h-2.5 rounded-full border-2"
               style={{
@@ -31,7 +28,11 @@ export default function Timeline({ profile, events }: Props) {
               }}
               aria-hidden="true"
             />
-            <EventCard event={event} />
+            <EventCard
+              event={event}
+              childProfileId={profile.id!}
+              initialTasks={taskMap[event.key] ?? []}
+            />
           </div>
         ))}
       </div>

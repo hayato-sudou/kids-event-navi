@@ -1,6 +1,7 @@
 export type EventKey = 'omiyamairi' | 'okuizome' | 'half' | 'birthday1';
 
 export interface ChildProfile {
+  id?: string;          // DB保存後に付与
   name: string;
   birthDate: Date;
 }
@@ -9,7 +10,7 @@ export interface KidsEvent {
   key: EventKey;
   name: string;
   description: string;
-  detail: string;        // ← 追加
+  detail: string;
   date: Date;
   colorScheme: EventColorScheme;
   icon: string;

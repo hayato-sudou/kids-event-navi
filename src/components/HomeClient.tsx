@@ -4,20 +4,39 @@ import { useState } from 'react';
 import { signOut } from 'next-auth/react';
 import ChildForm from '@/components/ChildForm';
 import Timeline from '@/components/Timeline';
+import SettingsModal from '@/components/SettingsModal';
 import { computeKidsEvents } from '@/lib/events';
-import type { ChildProfile, KidsEvent } from '@/types';
+import type { ChildProfile, KidsEvent, Task } from '@/types';
+import { saveChildProfileAction } from '../app/actions/profile';
 
 interface Props {
   userName: string;
+  initialProfile: ChildProfile | null;
+  initialEvents: KidsEvent[];
+  initialTaskMap: Record<string, Task[]>;
 }
 
-export default function HomeClient({ userName }: Props) {
-  const [profile, setProfile] = useState<ChildProfile | null>(null);
-  const [events, setEvents] = useState<KidsEvent[]>([]);
+export default function HomeClient({
+  userName,
+  initialProfile,
+  initialEvents,
+  initialTaskMap,
+}: Props) {
+  const [profile, setProfile] = useState<ChildProfile | null>(initialProfile);
+  const [events, setEvents] = useState<KidsEvent[]>(initialEvents);
+  const [taskMap] = useState<Record<string, Task[]>>(initialTaskMap);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const handleSubmit = (newProfile: ChildProfile) => {
-    setProfile(newProfile);
-    setEvents(computeKidsEvents(newProfile.birthDate));
+  const handleSubmit = async (newProfile: ChildProfile) => {
+    const id = await saveChildProfileAction(newProfile);
+    const saved = { ...newProfile, id: id ?? undefined };
+    setProfile(saved);
+    setEvents(computeKidsEvents(saved.birthDate));
+  };
+
+  const handleReset = () => {
+    setProfile(null);
+    setEvents([]);
   };
 
   return (
@@ -32,8 +51,20 @@ export default function HomeClient({ userName }: Props) {
               生年月日からイベントを自動生成します
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs text-stone-500">{userName}</span>
+
+            {/* 設定ボタン */}
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label="設定"
+              className="text-xs px-3 py-1.5 rounded-lg border border-stone-200
+                         text-stone-500 hover:bg-stone-50 transition"
+            >
+              設定
+            </button>
+
+            {/* ログアウト */}
             <button
               onClick={() => signOut({ callbackUrl: '/auth/signin' })}
               className="text-xs px-3 py-1.5 rounded-lg border border-stone-200
@@ -53,14 +84,12 @@ export default function HomeClient({ userName }: Props) {
                 <h2 className="text-sm font-medium text-stone-600 mb-4">
                   お子さまの情報
                 </h2>
-                <ChildForm onSubmit={handleSubmit} />
+                <ChildForm onSubmit={handleSubmit} initialProfile={profile} />
               </div>
               <div className="hidden md:block mt-4 p-4 bg-sage-100 rounded-2xl border border-sage-200">
-                <p className="text-xs text-sage-800 leading-relaxed">
-                  ✦ 今後追加予定の機能
-                </p>
+                <p className="text-xs text-sage-800 leading-relaxed">✦ 今後追加予定の機能</p>
                 <ul className="mt-2 space-y-1">
-                  {['やることリスト', 'AIアドバイス', 'お店・サービス検索', 'リマインダー通知'].map((item) => (
+                  {['AIアドバイス', 'お店・サービス検索', 'リマインダー通知'].map((item) => (
                     <li key={item} className="text-xs text-sage-800 flex items-center gap-1.5">
                       <span className="w-1 h-1 rounded-full bg-sage-300 flex-shrink-0" />
                       {item}
@@ -73,13 +102,22 @@ export default function HomeClient({ userName }: Props) {
 
           <section>
             {profile && events.length > 0 ? (
-              <Timeline profile={profile} events={events} />
+              <Timeline profile={profile} events={events} taskMap={taskMap} />
             ) : (
               <EmptyState />
             )}
           </section>
         </div>
       </main>
+
+      {/* 設定モーダル */}
+      {settingsOpen && (
+        <SettingsModal
+          profile={profile}
+          onClose={() => setSettingsOpen(false)}
+          onReset={handleReset}
+        />
+      )}
     </div>
   );
 }
@@ -91,9 +129,7 @@ function EmptyState() {
                     bg-white rounded-2xl border border-stone-100
                     text-center p-8">
       <div className="text-4xl mb-4">🌿</div>
-      <p className="text-sm font-medium text-stone-500">
-        イベントがここに表示されます
-      </p>
+      <p className="text-sm font-medium text-stone-500">イベントがここに表示されます</p>
       <p className="text-xs text-stone-300 mt-1.5 leading-relaxed">
         左のフォームに名前と生年月日を入力して<br />
         「イベントを生成する」を押してください

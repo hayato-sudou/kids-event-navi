@@ -2,21 +2,26 @@
 
 import { useState, useEffect, useRef, KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import type { KidsEvent } from '@/types';
+import type { KidsEvent, Task } from '@/types';
 import { useTasks } from '@/hooks/useTasks';
 
 interface Props {
   event: KidsEvent;
+  childProfileId: string;
+  initialTasks: Task[];
   onClose: () => void;
 }
 
-export default function TaskModal({ event, onClose }: Props) {
-  const { tasks, toggle, add, remove, checkedCount } = useTasks(event.key);
+export default function TaskModal({ event, childProfileId, initialTasks, onClose }: Props) {
+  const { tasks, toggle, add, remove, checkedCount } = useTasks(
+    event.key,
+    childProfileId,
+    initialTasks
+  );
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const { colorScheme: cs } = event;
 
-  // Escキーで閉じる
   useEffect(() => {
     const handler = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -25,7 +30,6 @@ export default function TaskModal({ event, onClose }: Props) {
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  // 開いたときに入力欄にフォーカス
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -44,14 +48,11 @@ export default function TaskModal({ event, onClose }: Props) {
 
   return createPortal(
     <>
-      {/* オーバーレイ */}
       <div
         className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
         aria-hidden="true"
         onClick={onClose}
       />
-
-      {/* モーダル本体 */}
       <div
         role="dialog"
         aria-modal="true"
@@ -59,8 +60,6 @@ export default function TaskModal({ event, onClose }: Props) {
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
       >
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-
-          {/* ヘッダー */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-stone-100">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0"
@@ -70,9 +69,7 @@ export default function TaskModal({ event, onClose }: Props) {
               {event.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-sm font-semibold text-stone-800">
-                {event.name}
-              </h2>
+              <h2 className="text-sm font-semibold text-stone-800">{event.name}</h2>
               <p className="text-[11px] text-stone-400 mt-0.5">
                 やることリスト · {checkedCount}/{tasks.length} 完了
               </p>
@@ -89,16 +86,9 @@ export default function TaskModal({ event, onClose }: Props) {
             </button>
           </div>
 
-          {/* タスクリスト */}
-          <ul
-            className="px-5 py-3 space-y-1 max-h-72 overflow-y-auto"
-            aria-label="タスク一覧"
-          >
+          <ul className="px-5 py-3 space-y-1 max-h-72 overflow-y-auto" aria-label="タスク一覧">
             {tasks.map((task) => (
-              <li
-                key={task.id}
-                className="flex items-center gap-3 py-2 group"
-              >
+              <li key={task.id} className="flex items-center gap-3 py-2 group">
                 <button
                   role="checkbox"
                   aria-checked={task.checked}
@@ -117,15 +107,9 @@ export default function TaskModal({ event, onClose }: Props) {
                     </svg>
                   )}
                 </button>
-
-                <span
-                  className={`flex-1 text-sm transition-colors ${
-                    task.checked ? 'line-through text-stone-300' : 'text-stone-700'
-                  }`}
-                >
+                <span className={`flex-1 text-sm transition-colors ${task.checked ? 'line-through text-stone-300' : 'text-stone-700'}`}>
                   {task.label}
                 </span>
-
                 <button
                   onClick={() => remove(task.id)}
                   aria-label={`${task.label}を削除`}
@@ -141,7 +125,6 @@ export default function TaskModal({ event, onClose }: Props) {
             ))}
           </ul>
 
-          {/* タスク追加 */}
           <div className="px-5 py-4 border-t border-stone-100">
             <div className="flex gap-2">
               <input

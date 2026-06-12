@@ -1,16 +1,22 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { format } from 'date-fns';
+import { ja } from 'date-fns/locale';
 import type { ChildProfile } from '@/types';
 import DatePicker from './DatePicker';
 
 interface Props {
   onSubmit: (profile: ChildProfile) => void;
+  initialProfile?: ChildProfile | null;
 }
 
-export default function ChildForm({ onSubmit }: Props) {
-  const [name, setName] = useState('');
-  const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
+export default function ChildForm({ onSubmit, initialProfile }: Props) {
+  const isRegistered = !!initialProfile?.id;
+  const [name, setName] = useState(initialProfile?.name ?? '');
+  const [birthDate, setBirthDate] = useState<Date | undefined>(
+    initialProfile?.birthDate
+  );
   const [error, setError] = useState('');
 
   const handleSubmit = (e: FormEvent) => {
@@ -21,6 +27,7 @@ export default function ChildForm({ onSubmit }: Props) {
     }
     setError('');
     onSubmit({
+      ...initialProfile,
       name: name.trim() || 'お子さま',
       birthDate,
     });
@@ -28,6 +35,7 @@ export default function ChildForm({ onSubmit }: Props) {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
+      {/* 名前（常に編集可能） */}
       <div className="mb-4">
         <label
           htmlFor="child-name"
@@ -49,22 +57,39 @@ export default function ChildForm({ onSubmit }: Props) {
         />
       </div>
 
+      {/* 生年月日 */}
       <div className="mb-5">
-        <label
-          className="block text-xs font-medium text-stone-500 mb-1.5"
-        >
+        <label className="block text-xs font-medium text-stone-500 mb-1.5">
           生年月日
-          <span className="text-rose-400 ml-0.5" aria-hidden="true">*</span>
+          {!isRegistered && (
+            <span className="text-rose-400 ml-0.5" aria-hidden="true">*</span>
+          )}
         </label>
-        <DatePicker
-          value={birthDate}
-          onChange={setBirthDate}
-          required
-        />
-        {error && (
-          <p role="alert" className="mt-1.5 text-xs text-rose-500">
-            {error}
-          </p>
+
+        {isRegistered ? (
+          // 登録済み：テキスト表示のみ
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-stone-100 bg-stone-50">
+            <span className="text-sm text-stone-600">
+              {format(birthDate!, 'yyyy年M月d日（E）', { locale: ja })}
+            </span>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-400">
+              変更不可
+            </span>
+          </div>
+        ) : (
+          // 未登録：日付ピッカー
+          <>
+            <DatePicker
+              value={birthDate}
+              onChange={setBirthDate}
+              required
+            />
+            {error && (
+              <p role="alert" className="mt-1.5 text-xs text-rose-500">
+                {error}
+              </p>
+            )}
+          </>
         )}
       </div>
 
@@ -75,7 +100,7 @@ export default function ChildForm({ onSubmit }: Props) {
                    hover:bg-sage-200 active:scale-[0.98]
                    transition-all duration-150"
       >
-        イベントを生成する
+        {isRegistered ? '名前を保存する' : 'イベントを生成する'}
       </button>
     </form>
   );
