@@ -14,7 +14,7 @@ export async function getChildProfile(
 
   const { data, error } = await supabase
     .from('child_profiles')
-    .select('id, name, birth_date')
+    .select('id, name, birth_date, avatar_url') 
     .eq('user_id', userId)
     .order('created_at', { ascending: true })
     .limit(1)
@@ -26,6 +26,7 @@ export async function getChildProfile(
     id: data.id,
     name: data.name,
     birthDate: new Date(data.birth_date),
+    avatarUrl: data.avatar_url ?? undefined,
   };
 }
 
@@ -111,4 +112,22 @@ export async function saveTasks(
       },
       { onConflict: 'child_profile_id,event_key' }
     );
+}
+
+export async function updateAvatarUrl(
+  profileId: string,
+  avatarUrl: string
+): Promise<boolean> {
+  const supabase = getSupabaseAdmin();
+
+  const { error } = await supabase
+    .from('child_profiles')
+    .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+    .eq('id', profileId);
+
+  if (error) {
+    console.error('updateAvatarUrl error:', error);
+    return false;
+  }
+  return true;
 }

@@ -2,6 +2,7 @@ export interface ChildProfile {
   id?: string;          // DB保存後に付与
   name: string;
   birthDate: Date;
+  avatarUrl?: string;
 }
 
 export interface KidsEvent {
