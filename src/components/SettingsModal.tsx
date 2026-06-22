@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import type { ChildProfile } from '@/types';
@@ -19,7 +19,14 @@ export default function SettingsModal({ profile, onClose, onReset, onAvatarUpdat
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // createPortal は document.body を必要とするため、
+  // クライアントでのマウント完了後にのみレンダリングする
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleReset = async () => {
     if (!profile?.id) return;
@@ -64,6 +71,8 @@ export default function SettingsModal({ profile, onClose, onReset, onAvatarUpdat
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  if (!mounted) return null;
 
   const currentAvatar = previewUrl ?? profile?.avatarUrl ?? null;
 

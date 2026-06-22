@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ChildProfile } from '@/types';
 import ChildForm from './ChildForm';
@@ -11,11 +11,20 @@ interface Props {
 
 export default function ChildProfileModal({ onSubmit }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // createPortal は document.body を必要とするため、
+  // クライアントでのマウント完了後にのみレンダリングする
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // フォーカストラップ
   useEffect(() => {
     dialogRef.current?.focus();
-  }, []);
+  }, [mounted]);
+
+  if (!mounted) return null;
 
   return createPortal(
     <div

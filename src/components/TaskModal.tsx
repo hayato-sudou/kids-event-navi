@@ -20,8 +20,15 @@ export default function TaskModal({ event, childProfileId, initialTasks, onClose
   );
   const [inputValue, setInputValue] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { colorScheme: cs } = event;
+
+  // createPortal は document.body を必要とするため、
+  // クライアントでのマウント完了後にのみレンダリングする
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 詳細の開閉（同じタスクを再クリックで閉じる）
   const toggleDetail = (id: string) => {
@@ -40,7 +47,9 @@ export default function TaskModal({ event, childProfileId, initialTasks, onClose
   // 開いたときに入力欄にフォーカス
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+  }, [mounted]);
+
+  if (!mounted) return null;
 
   const handleAdd = () => {
     add(inputValue);
