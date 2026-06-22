@@ -1,4 +1,5 @@
 import EventCard from './EventCard';
+import { getDefaultTasks } from '@/lib/defaultTasks';
 import type { ChildProfile, KidsEvent, Task } from '@/types';
 
 interface Props {
@@ -31,7 +32,11 @@ export default function Timeline({ profile, events, taskMap }: Props) {
             <EventCard
               event={event}
               childProfileId={profile.id!}
-              initialTasks={taskMap[event.key] ?? []}
+              // taskMap に該当キーが存在しない場合（取得失敗・未保存など）に
+              // 空配列 [] を渡すと、useTasks の自動保存により
+              // 空のタスクリストがそのまま DB へ上書き保存されてしまう。
+              // 必ずデフォルトタスク一式にフォールバックする。
+              initialTasks={taskMap[event.key] ?? getDefaultTasks(event.key)}
             />
           </div>
         ))}

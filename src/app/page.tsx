@@ -21,8 +21,18 @@ export default async function HomePage() {
     const eventKeys: EventKey[] = ['omiyamairi', 'okuizome', 'half', 'birthday1'];
     await Promise.all(
       eventKeys.map(async (key) => {
-        const tasks = await getTasks(profile.id!, key);
-        taskMap[key] = tasks ?? getDefaultTasks(key);
+        // getTasks が例外を投げた場合、Promise.all 全体ではなく
+        // このイベントのみデフォルトタスクへフォールバックする。
+        // try/catch を省略すると、1イベントの取得失敗が原因で
+        // taskMap にキー自体がセットされず、下流（Timeline）で
+        // 空配列にフォールバックしてしまい、誤って保存される事故につながる。
+        try {
+          const tasks = await getTasks(profile.id!, key);
+          taskMap[key] = tasks ?? getDefaultTasks(key);
+        } catch (err) {
+          console.error(`[HomePage] getTasks(${key}) に失敗しました。デフォルトタスクにフォールバックします。`, err);
+          taskMap[key] = getDefaultTasks(key);
+        }
       })
     );
   }

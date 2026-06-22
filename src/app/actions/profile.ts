@@ -6,6 +6,7 @@ import {
   saveChildProfile,
   getTasks,
   updateAvatarUrl,
+  deleteAllTasks,
 } from '@/lib/childProfile';
 import { computeKidsEvents } from '@/lib/events';
 import { getDefaultTasks } from '@/lib/defaultTasks'; 
@@ -25,6 +26,16 @@ export async function resetChildProfileAction(
 ): Promise<{ success: boolean }> {
   const session = await auth();
   if (!session?.user?.id) return { success: false };
+
+  // child_profiles を削除する前に、必ず event_memos を明示的に削除する。
+  // DB側の外部キーに ON DELETE CASCADE が設定されていることに依存すると、
+  // 設定漏れがあった場合に event_memos の行が孤立データとして残り続け、
+  // 後で作成される新しいプロフィールに誤って参照される事故につながる。
+  const tasksDeleted = await deleteAllTasks(profileId);
+  if (!tasksDeleted) {
+    console.error('reset error: event_memos の削除に失敗したため、child_profiles の削除を中止しました');
+    return { success: false };
+  }
 
   const supabase = getSupabaseAdmin();
   const { error } = await supabase
@@ -102,8 +113,17 @@ export async function loadInitialDataAction(): Promise<{
   const taskMap: Record<string, Task[]> = {};
   await Promise.all(
     eventKeys.map(async (key) => {
-      const tasks = await getTasks(profile.id!, key);
-      taskMap[key] = tasks ?? getDefaultTasks(key);
+      // getTasks が例外を投げても、このイベントのみデフォルトタスクへ
+      // フォールバックし、taskMap に必ずキーをセットする。
+      // ここを省略すると Timeline 側で空配列にフォールバックしてしまい、
+      // useTasks の自動保存により誤って空配列が保存される事故につながる。
+      try {
+        const tasks = await getTasks(profile.id!, key);
+        taskMap[key] = tasks ?? getDefaultTasks(key);
+      } catch (err) {
+        console.error(`[loadInitialDataAction] getTasks(${key}) に失敗しました。デフォルトタスクにフォールバックします。`, err);
+        taskMap[key] = getDefaultTasks(key);
+      }
     })
   );
 
